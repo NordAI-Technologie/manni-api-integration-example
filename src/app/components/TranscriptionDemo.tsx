@@ -2,11 +2,15 @@
 
 import React, { useState } from 'react';
 import { useTranscription, TranscriptionResult } from '../services/api-client';
+import ApiConfigForm from './ApiConfigForm';
+import { useApiConfig } from './ApiConfigProvider';
 
 interface TranscriptionDemoProps {
 }
 
 const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
+  const { isConfigured } = useApiConfig();
+  
   const {
     status,
     progress,
@@ -62,7 +66,18 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
         <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-100">
           <h2 className="text-2xl font-bold mb-4 text-gray-800">{" Démo d'intégration de l'API "}</h2>
           
-          {status === 'idle' && (
+          {/* API Configuration Form */}
+          <ApiConfigForm />
+          
+          {!isConfigured ? (
+            <div className="text-center p-8 bg-yellow-50 rounded-lg border border-yellow-100">
+              <svg className="w-12 h-12 text-yellow-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              <h3 className="text-xl font-semibold text-yellow-700 mb-2">{" Configuration requise "}</h3>
+              <p className="text-gray-700 mb-4">{" Veuillez configurer l'API endpoint et votre clé API avant de pouvoir utiliser la démo. "}</p>
+            </div>
+          ) : status === 'idle' && (
             <div className="upload-section">
               <div className="border-2 border-dashed border-[#209e67]/40 rounded-lg p-8 text-center bg-[#209e67]/5 transition-all duration-300 hover:bg-[#209e67]/10">
                 <svg className="w-16 h-16 mx-auto text-[#209e67] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -449,11 +464,12 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
           
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2 text-gray-800">{" 1. Configuration de l'environnement "}</h3>
+              <h3 className="text-lg font-semibold mb-2 text-gray-800">{" 1. Configuration de l'API "}</h3>
               <div className="bg-gray-800 p-4 rounded-lg font-mono text-sm text-gray-200 shadow-md">
-                <p>// Dans votre fichier .env.local</p>
-                <p className="text-[#209e67]">NEXT_PUBLIC_API_ENDPOINT=https://votre-api-endpoint.com</p>
-                <p className="text-[#209e67]">NEXT_PUBLIC_API_KEY=votre-api-key</p>
+                <p>// Depuis votre application</p>
+                <p className="text-[#209e67]">// Désormais, vous pouvez passer la configuration directement</p>
+                <p>const apiEndpoint = "https://votre-api-endpoint.com";</p>
+                <p>const apiKey = "votre-api-key";</p>
               </div>
             </div>
             
@@ -465,9 +481,9 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
                 <p>formData.append('file', votreFileObject)</p>
                 <p></p>
                 <p>// Requête d'upload</p>
-                <p>const uploadResponse = await fetch(`${'{API_ENDPOINT}'}/api/upload`, {'{'}</p>
+                <p>const uploadResponse = await fetch(`${'{apiEndpoint}'}/api/upload`, {'{'}</p>
                 <p>  method: 'POST',</p>
-                <p>  headers: {'{'} 'x-api-key': API_KEY {'}'},</p>
+                <p>  headers: {'{'} 'x-api-key': apiKey {'}'},</p>
                 <p>  body: formData</p>
                 <p>{'}'})</p>
                 <p></p>
@@ -496,11 +512,11 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
               {!showCode ? (
                 <div className="bg-gray-800 p-4 rounded-lg font-mono text-sm text-gray-200 shadow-md">
                   <p>// Pour les fichiers courts (&lt;4 minutes)</p>
-                  <p>const transcribeResponse = await fetch(`${'{API_ENDPOINT}'}/api/transcribe/${'{file_id}'}`, {'{'}</p>
+                  <p>const transcribeResponse = await fetch(`${'{apiEndpoint}'}/api/transcribe/${'{file_id}'}`, {'{'}</p>
                   <p>  method: 'POST',</p>
                   <p>  headers: {'{'}</p>
                   <p>    'Content-Type': 'application/json',</p>
-                  <p>    'x-api-key': API_KEY</p>
+                  <p>    'x-api-key': apiKey</p>
                   <p>  {'}'},</p>
                   <p>  body: JSON.stringify({'{'}</p>
                   <p>    language: null // optionnel, null pour détection automatique</p>
@@ -514,11 +530,11 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
                 <div className="bg-gray-800 p-4 rounded-lg font-mono text-sm text-gray-200 shadow-md">
                   <p>{"// Pour les fichiers longs (>4 minutes)"}</p>
                   <p>// 1. Initier la transcription (sans attendre la réponse complète)</p>
-                  <p>fetch(`${'{API_ENDPOINT}'}/api/transcribe/${'{file_id}'}`, {'{'}</p>
+                  <p>fetch(`${'{apiEndpoint}'}/api/transcribe/${'{file_id}'}`, {'{'}</p>
                   <p>  method: 'POST',</p>
                   <p>  headers: {'{'}</p>
                   <p>    'Content-Type': 'application/json',</p>
-                  <p>    'x-api-key': API_KEY</p>
+                  <p>    'x-api-key': apiKey</p>
                   <p>  {'}'},</p>
                   <p>  body: JSON.stringify({'{'}</p>
                   <p>    language: null // optionnel</p>
@@ -532,10 +548,10 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
                   <p>{"    const checkStatus = async () => {'{'}"}</p>
                   <p>      try {'{'}</p>
                   <p>        const statusResponse = await fetch(</p>
-                  <p>          `${'{API_ENDPOINT}'}/api/transcribe/${'{fileId}'}/status`,</p>
+                  <p>          `${'{apiEndpoint}'}/api/transcribe/${'{fileId}'}/status`,</p>
                   <p>          {'{'}</p>
                   <p>            method: 'GET',</p>
-                  <p>            headers: {'{'} 'x-api-key': API_KEY {'}'}</p>
+                  <p>            headers: {'{'} 'x-api-key': apiKey {'}'}</p>
                   <p>          {'}'}</p>
                   <p>        );</p>
                   <p>        </p>

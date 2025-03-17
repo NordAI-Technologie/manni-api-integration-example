@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from 'react';
+import { useApiConfig } from '../components/ApiConfigProvider';
 
 export interface TranscriptionResult {
   text: string;
@@ -13,7 +14,7 @@ export interface TranscriptionResult {
             text: string;
         }]
     }
-},
+  },
   segments: TranscriptionSegment[];
 }
 
@@ -27,6 +28,7 @@ export interface TranscriptionSegment {
 export type TranscriptionStatus = 'idle' | 'uploading' | 'transcribing' | 'polling' | 'completed' | 'failed';
 
 export function useTranscription() {
+  const { apiConfig, isConfigured } = useApiConfig();
   const [fileId, setFileId] = useState<string | null>(null);
   const [status, setStatus] = useState<TranscriptionStatus>('idle');
   const [progress, setProgress] = useState<number>(0);
@@ -55,6 +57,10 @@ export function useTranscription() {
   }, []);
 
   const uploadFile = useCallback(async (file: File): Promise<string> => {
+    if (!isConfigured) {
+      throw new Error('API not configured. Please provide API endpoint and key');
+    }
+
     try {
       setStatus('uploading');
       
@@ -66,6 +72,10 @@ export function useTranscription() {
 
       const response = await fetch('/api/transcription-proxy?path=upload', {
         method: 'POST',
+        headers: {
+          'x-api-endpoint': apiConfig.apiEndpoint,
+          'x-api-key': apiConfig.apiKey,
+        },
         body: formData,
       });
 
@@ -83,9 +93,13 @@ export function useTranscription() {
       setError(errorMessage);
       throw err;
     }
-  }, []);
+  }, [apiConfig.apiEndpoint, apiConfig.apiKey, isConfigured]);
 
   const startTranscription = useCallback(async (fileId: string, language = null): Promise<any> => {
+    if (!isConfigured) {
+      throw new Error('API not configured. Please provide API endpoint and key');
+    }
+
     try {
       setStatus('polling');
       setProgress(5);
@@ -94,6 +108,8 @@ export function useTranscription() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-endpoint': apiConfig.apiEndpoint,
+          'x-api-key': apiConfig.apiKey,
         },
         body: JSON.stringify({
           language: language,
@@ -109,15 +125,23 @@ export function useTranscription() {
       startPolling(fileId);
       return { status: 'polling', file_id: fileId };
     }
-  }, []);
+  }, [apiConfig.apiEndpoint, apiConfig.apiKey, isConfigured]);
 
   const startPolling = useCallback((fileId: string) => {
+    if (!isConfigured) {
+      throw new Error('API not configured. Please provide API endpoint and key');
+    }
+
     setStatus('polling');
     
     const checkStatus = async () => {
       try {
         const response = await fetch(`/api/transcription-proxy?path=transcribe/${fileId}/status`, {
           method: 'GET',
+          headers: {
+            'x-api-endpoint': apiConfig.apiEndpoint,
+            'x-api-key': apiConfig.apiKey,
+          },
         });
         
         if (!response.ok) {
@@ -158,7 +182,7 @@ export function useTranscription() {
     };
     
     checkStatus();
-  }, []);
+  }, [apiConfig.apiEndpoint, apiConfig.apiKey, isConfigured]);
 
   const transformApiResult = (apiResponse: any): TranscriptionResult => {
     if (
@@ -196,6 +220,10 @@ export function useTranscription() {
   };
 
   const processAudioFile = useCallback(async (file: File, options = {}): Promise<any> => {
+    if (!isConfigured) {
+      throw new Error('API not configured. Please provide API endpoint and key');
+    }
+
     try {
       const fileId = await uploadFile(file);
       
@@ -204,7 +232,7 @@ export function useTranscription() {
       console.error('Error processing audio file:', err);
       throw err;
     }
-  }, [uploadFile, startTranscription]);
+  }, [uploadFile, startTranscription, isConfigured]);
 
   return {
     fileId,
@@ -213,6 +241,7 @@ export function useTranscription() {
     result,
     error,
     isLongFile,
+    isConfigured,
     reset,
     uploadFile,
     startTranscription,

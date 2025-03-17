@@ -5,13 +5,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const path = searchParams.get('path') || '';
     
-    const apiUrl = `${process.env.API_ENDPOINT}/api/${path}`;
+    const apiEndpoint = request.headers.get('x-api-endpoint') || process.env.API_ENDPOINT;
+    const apiKey = request.headers.get('x-api-key') || process.env.API_KEY;
+    
+    if (!apiEndpoint || !apiKey) {
+      return NextResponse.json({ error: 'API configuration missing' }, { status: 400 });
+    }
+    
+    const apiUrl = `${apiEndpoint}/api/${path}`;
     console.log(`Proxying GET request to: ${apiUrl}`);
     
     const response = await fetch(apiUrl, {
       method: 'GET',
       headers: {
-        'x-api-key': process.env.API_KEY as string,
+        'x-api-key': apiKey,
       },
       signal: AbortSignal.timeout(30000),
     });
@@ -63,6 +70,14 @@ export async function POST(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const path = searchParams.get('path') || '';
     
+    // Get API configuration from request headers
+    const apiEndpoint = request.headers.get('x-api-endpoint') || process.env.API_ENDPOINT;
+    const apiKey = request.headers.get('x-api-key') || process.env.API_KEY;
+    
+    if (!apiEndpoint || !apiKey) {
+      return NextResponse.json({ error: 'API configuration missing' }, { status: 400 });
+    }
+    
     console.log(`Proxying POST request to: ${path}`);
     
     if (path === 'upload') {
@@ -73,7 +88,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'No file provided' }, { status: 400 });
       }
       
-      const apiUrl = `${process.env.API_ENDPOINT}/api/upload`;
+      const apiUrl = `${apiEndpoint}/api/upload`;
       console.log(`Uploading file to ${apiUrl}`);
       
       const uploadFormData = new FormData();
@@ -82,7 +97,7 @@ export async function POST(request: NextRequest) {
       const uploadResponse = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'x-api-key': process.env.API_KEY as string,
+          'x-api-key': apiKey,
         },
         body: uploadFormData,
         signal: AbortSignal.timeout(60000), // 60-second timeout
@@ -103,7 +118,7 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const fileId = path.split('/')[1];
         
-        const apiUrl = `${process.env.API_ENDPOINT}/api/transcribe/${fileId}`;
+        const apiUrl = `${apiEndpoint}/api/transcribe/${fileId}`;
         console.log(`Starting transcription for ${fileId}`);
         
         (global as any)[`start_time_${fileId}`] = Date.now();
@@ -112,7 +127,7 @@ export async function POST(request: NextRequest) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'x-api-key': process.env.API_KEY as string,
+            'x-api-key': apiKey,
           },
           body: JSON.stringify({
             language: body.language || null
