@@ -15,7 +15,7 @@ export default function Home() {
       </Suspense>
       
       <footer className="mt-12 text-center text-gray-500 text-sm">
-        <p>© 2025 - Démo d'intégration API</p>
+        <p>© {new Date().getFullYear()} - Démo d'intégration API</p>
       </footer>
     </div>
   );
