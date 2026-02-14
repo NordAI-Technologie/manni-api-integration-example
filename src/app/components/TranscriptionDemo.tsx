@@ -98,12 +98,12 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#209e67]/50 focus:border-[#209e67]"
                     >
                       <option value="">{" Auto-détection "}</option>
-                      <option value="fr">{" Français "}</option>
-                      <option value="en">{" English "}</option>
-                      <option value="es">{" Español "}</option>
-                      <option value="de">{" Deutsch "}</option>
-                      <option value="it">{" Italiano "}</option>
-                      <option value="pt">{" Português "}</option>
+                      <option value="fr">{" Français (fr) "}</option>
+                      <option value="en">{" English (en) "}</option>
+                      <option value="es">{" Español (es) "}</option>
+                      <option value="de">{" Deutsch (de) "}</option>
+                      <option value="it">{" Italiano (it) "}</option>
+                      <option value="pt">{" Português (pt) "}</option>
                     </select>
                   </div>
                   <div>
