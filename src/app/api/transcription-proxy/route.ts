@@ -130,7 +130,10 @@ export async function POST(request: NextRequest) {
             'x-api-key': apiKey,
           },
           body: JSON.stringify({
-            language: body.language || null
+            language: body.language || null,
+            ...(body.num_speakers != null && { num_speakers: body.num_speakers }),
+            ...(body.min_speakers != null && { min_speakers: body.min_speakers }),
+            ...(body.max_speakers != null && { max_speakers: body.max_speakers }),
           }),
         }).catch(err => {
           console.error('Error starting transcription:', err);

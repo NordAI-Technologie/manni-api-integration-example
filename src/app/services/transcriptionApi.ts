@@ -32,6 +32,9 @@ export interface UploadResponse {
   
   export interface TranscriptionOptions {
     language?: string | null;
+    num_speakers?: number | null;
+    min_speakers?: number | null;
+    max_speakers?: number | null;
     onUploadComplete?: (fileId: string) => void;
     onProgress?: (progress: number) => void;
   }
@@ -72,9 +75,14 @@ export interface UploadResponse {
    * Démarre la transcription d'un fichier audio
    * @param {string} fileId - L'ID du fichier à transcrire
    * @param {string|null} language - Code de langue optionnel (null pour détection auto)
+   * @param {object} speakerOptions - Options de diarisation (num_speakers, min_speakers, max_speakers)
    * @returns {Promise<TranscriptionResult|any>} - Les résultats de la transcription ou un accusé de réception
    */
-  export async function transcribeFile(fileId: string, language: string | null = null): Promise<any> {
+  export async function transcribeFile(
+    fileId: string,
+    language: string | null = null,
+    speakerOptions: { num_speakers?: number | null; min_speakers?: number | null; max_speakers?: number | null } = {}
+  ): Promise<any> {
     try {
       const response = await fetch(`${API_ENDPOINT}/api/transcribe/${fileId}`, {
         method: 'POST',
@@ -84,6 +92,7 @@ export interface UploadResponse {
         },
         body: JSON.stringify({
           language,
+          ...speakerOptions,
         }),
       });
   
@@ -173,22 +182,26 @@ export interface UploadResponse {
     file: File, 
     options: TranscriptionOptions = {}
   ): Promise<TranscriptionResult> {
-    const { 
-      language = null, 
-      onUploadComplete = () => {}, 
-      onProgress = () => {} 
+    const {
+      language = null,
+      num_speakers = null,
+      min_speakers = null,
+      max_speakers = null,
+      onUploadComplete = () => {},
+      onProgress = () => {}
     } = options;
     const uploadResponse = await uploadFile(file);
     const fileId = uploadResponse.file_id;
-    
+
     onUploadComplete(fileId);
-    
+
+    const speakerOptions = { num_speakers, min_speakers, max_speakers };
     const isLongFile = file.size > 4 * 1024 * 1024;
-    
+
     if (!isLongFile) {
-      return await transcribeFile(fileId, language);
+      return await transcribeFile(fileId, language, speakerOptions);
     } else {
-      await transcribeFile(fileId, language);
+      await transcribeFile(fileId, language, speakerOptions);
       return await pollTranscriptionStatus(fileId, onProgress);
     }
   }

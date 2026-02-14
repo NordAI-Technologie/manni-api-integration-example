@@ -23,16 +23,23 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
   const [fileName, setFileName] = useState<string>('');
   const [activeTab, setActiveTab] = useState<'demo' | 'code' | 'doc'>('demo');
   const [showCode, setShowCode] = useState<boolean>(false);
+  const [language, setLanguage] = useState<string>('');
+  const [numSpeakers, setNumSpeakers] = useState<string>('');
+  const [minSpeakers, setMinSpeakers] = useState<string>('');
+  const [maxSpeakers, setMaxSpeakers] = useState<string>('');
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     try {
       setFileName(file.name);
-      
+
       await processAudioFile(file, {
-        language: null // Use automatic language detection
+        language: language || null,
+        num_speakers: numSpeakers ? parseInt(numSpeakers) : null,
+        min_speakers: minSpeakers ? parseInt(minSpeakers) : null,
+        max_speakers: maxSpeakers ? parseInt(maxSpeakers) : null,
       });
     } catch (err) {
       console.error('Error processing file:', err);
@@ -78,16 +85,77 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
               <p className="text-gray-700 mb-4">{" Veuillez configurer l'API endpoint et votre clé API avant de pouvoir utiliser la démo. "}</p>
             </div>
           ) : status === 'idle' && (
-            <div className="upload-section">
+            <div className="upload-section space-y-6">
+              {/* Options de transcription */}
+              <div className="bg-gray-50 rounded-lg p-5 border border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-700 mb-4">{" Options de transcription "}</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{" Langue "}</label>
+                    <select
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#209e67]/50 focus:border-[#209e67]"
+                    >
+                      <option value="">{" Auto-détection "}</option>
+                      <option value="fr">{" Français "}</option>
+                      <option value="en">{" English "}</option>
+                      <option value="es">{" Español "}</option>
+                      <option value="de">{" Deutsch "}</option>
+                      <option value="it">{" Italiano "}</option>
+                      <option value="pt">{" Português "}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{" Nb speakers exact "}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      placeholder="Auto"
+                      value={numSpeakers}
+                      onChange={(e) => setNumSpeakers(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#209e67]/50 focus:border-[#209e67]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{" Speakers min "}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      placeholder="Auto"
+                      value={minSpeakers}
+                      onChange={(e) => setMinSpeakers(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#209e67]/50 focus:border-[#209e67]"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">{" Speakers max "}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      placeholder="Auto"
+                      value={maxSpeakers}
+                      onChange={(e) => setMaxSpeakers(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#209e67]/50 focus:border-[#209e67]"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-3">{" Tous les champs sont optionnels. Laissez vide pour la détection automatique. "}</p>
+              </div>
+
+              {/* Zone d'upload */}
               <div className="border-2 border-dashed border-[#209e67]/40 rounded-lg p-8 text-center bg-[#209e67]/5 transition-all duration-300 hover:bg-[#209e67]/10">
                 <svg className="w-16 h-16 mx-auto text-[#209e67] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                 </svg>
                 <p className="text-lg mb-4 text-gray-700">{" Déposez votre fichier audio ici ou cliquez pour parcourir "}</p>
-                <input 
-                  type="file" 
-                  accept="audio/*" 
-                  onChange={handleFileUpload} 
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleFileUpload}
                   className="w-full max-w-xs mx-auto bg-[#209e67] hover:bg-[#1c8a59] text-white py-2 px-4 rounded-md cursor-pointer transition-colors duration-200 shadow-md"
                 />
                 <p className="text-sm text-gray-500 mt-3">{" Formats supportés : MP3, WAV, M4A, etc. "}</p>
@@ -519,7 +587,10 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
                   <p>    'x-api-key': apiKey</p>
                   <p>  {'}'},</p>
                   <p>  body: JSON.stringify({'{'}</p>
-                  <p>    language: null // optionnel, null pour détection automatique</p>
+                  <p>    language: null,        // optionnel, null pour détection automatique</p>
+                  <p>    num_speakers: 3,       // optionnel, nombre exact de participants</p>
+                  <p>    min_speakers: 2,       // optionnel, borne basse</p>
+                  <p>    max_speakers: 5        // optionnel, borne haute</p>
                   <p>  {'}'})</p>
                   <p>{'}'})</p>
                   <p></p>
@@ -537,7 +608,10 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
                   <p>    'x-api-key': apiKey</p>
                   <p>  {'}'},</p>
                   <p>  body: JSON.stringify({'{'}</p>
-                  <p>    language: null // optionnel</p>
+                  <p>    language: null,        // optionnel</p>
+                  <p>    num_speakers: 3,       // optionnel, nombre exact de participants</p>
+                  <p>    min_speakers: 2,       // optionnel, borne basse</p>
+                  <p>    max_speakers: 5        // optionnel, borne haute</p>
                   <p>  {'}'})</p>
                   <p>{'}'})</p>
                   <p></p>
@@ -644,7 +718,10 @@ const TranscriptionDemo: React.FC<TranscriptionDemoProps> = () => {
                       <h4 className="text-sm font-semibold mb-1 text-gray-800">{" Body: "}</h4>
                       <div className="font-mono text-sm bg-gray-100 p-2 rounded border border-gray-200">
                         <p>{'{'}</p>
-                        <p className="text-[#209e67]">  "language": "string" // Optionnel, null pour la détection automatique</p>
+                        <p className="text-[#209e67]">  "language": "string",      // Optionnel, null pour la détection automatique</p>
+                        <p className="text-[#209e67]">  "num_speakers": 3,         // Optionnel, nombre exact de participants</p>
+                        <p className="text-[#209e67]">  "min_speakers": 2,         // Optionnel, nombre minimum de participants</p>
+                        <p className="text-[#209e67]">  "max_speakers": 5          // Optionnel, nombre maximum de participants</p>
                         <p>{'}'}</p>
                       </div>
                     </div>

@@ -95,7 +95,7 @@ export function useTranscription() {
     }
   }, [apiConfig.apiEndpoint, apiConfig.apiKey, isConfigured]);
 
-  const startTranscription = useCallback(async (fileId: string, language = null): Promise<any> => {
+  const startTranscription = useCallback(async (fileId: string, language = null, speakerOptions: { num_speakers?: number | null; min_speakers?: number | null; max_speakers?: number | null } = {}): Promise<any> => {
     if (!isConfigured) {
       throw new Error('API not configured. Please provide API endpoint and key');
     }
@@ -113,6 +113,7 @@ export function useTranscription() {
         },
         body: JSON.stringify({
           language: language,
+          ...speakerOptions,
         }),
       });
 
@@ -196,10 +197,11 @@ export function useTranscription() {
         .join(' ')
         .trim();
       
-      const segments = utterances.map((utterance: { start: number; end: number; text: string }) => ({
+      const segments = utterances.map((utterance: { start: number; end: number; text: string; speaker?: string }) => ({
         start: utterance.start,
         end: utterance.end,
-        text: utterance.text
+        text: utterance.text,
+        speaker: utterance.speaker || null,
       }));
       
       return {
@@ -227,7 +229,8 @@ export function useTranscription() {
     try {
       const fileId = await uploadFile(file);
       
-      return await startTranscription(fileId, (options as any).language);
+      const { language, num_speakers, min_speakers, max_speakers, ...rest } = options as any;
+      return await startTranscription(fileId, language, { num_speakers, min_speakers, max_speakers });
     } catch (err) {
       console.error('Error processing audio file:', err);
       throw err;
