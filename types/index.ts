@@ -1,4 +1,7 @@
+/** Server environment only. No API credential is public or sent to the browser. */
 export interface Env {
-    NEXT_PUBLIC_API_ENDPOINT: string;
-    NEXT_PUBLIC_API_KEY: string;
+  API_ENDPOINT: string;
+  API_KEY: string;
+  DEMO_ACCESS_PASSWORD?: string;
+  DEMO_ACCESS_USERNAME?: string;
 }
